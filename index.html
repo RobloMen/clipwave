@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ReelTok - Ваши видео</title>
+    <title>ClipWave - Ваши видео</title>
     <style>
         * {
             margin: 0;
@@ -232,6 +232,34 @@
             display: none;
             z-index: 1001;
         }
+        
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #666;
+        }
+        
+        .empty-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            position: relative;
+            z-index: 100;
+        }
+        
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
     </style>
 </head>
 <body>
@@ -239,8 +267,19 @@
         <!-- Уведомления -->
         <div class="notification" id="notification"></div>
         
+        <!-- Шапка -->
+        <div class="header">
+            <div class="logo">ClipWave</div>
+        </div>
+        
         <!-- Главная лента -->
         <div class="video-container" id="videoFeed">
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">📹</div>
+                <h2>Пока нет видео</h2>
+                <p>Загрузите первое видео, чтобы начать просмотр</p>
+                <button class="upload-btn" onclick="showSection('uploadSection')">Загрузить видео</button>
+            </div>
             <!-- Видео будут добавляться динамически -->
         </div>
         
@@ -278,9 +317,9 @@
         
         <!-- Навигация -->
         <div class="nav">
-            <div class="nav-item active" onclick="showSection('videoFeed')">🏠</div>
-            <div class="nav-item" onclick="showSection('uploadSection')">➕</div>
-            <div class="nav-item" onclick="showSection('profileSection')">👤</div>
+            <div class="nav-item active" onclick="showSection('videoFeed')">🏠 Главная</div>
+            <div class="nav-item" onclick="showSection('uploadSection')">➕ Загрузить</div>
+            <div class="nav-item" onclick="showSection('profileSection')">👤 Профиль</div>
         </div>
     </div>
 
@@ -292,49 +331,38 @@
         
         // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
-            loadSampleVideos();
+            // Загружаем видео из localStorage
+            loadVideosFromStorage();
             setupEventListeners();
-            showNotification('Добро пожаловать в ReelTok!');
+            showNotification('Добро пожаловать в ClipWave!');
+            updateEmptyState();
         });
         
-        // Загрузка примеров видео
-        function loadSampleVideos() {
-            videos = [
-                {
-                    id: 1,
-                    username: 'tech_reviews',
-                    description: 'Обзор нового смартфона 📱',
-                    tags: ['#техника', '#обзор', '#гаджеты'],
-                    likes: 1245,
-                    liked: false,
-                    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4'
-                },
-                {
-                    id: 2,
-                    username: 'cooking_master',
-                    description: 'Готовим идеальный стейк 🥩',
-                    tags: ['#рецепт', '#еда', '#кулинария'],
-                    likes: 892,
-                    liked: false,
-                    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
-                },
-                {
-                    id: 3,
-                    username: 'travel_vibes',
-                    description: 'Красивые места для отпуска ✈️',
-                    tags: ['#путешествия', '#отдых', '#природа'],
-                    likes: 2103,
-                    liked: false,
-                    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
-                }
-            ];
-            
-            renderVideos();
+        // Загрузка видео из localStorage
+        function loadVideosFromStorage() {
+            const savedVideos = localStorage.getItem('clipwave_videos');
+            if (savedVideos) {
+                videos = JSON.parse(savedVideos);
+                renderVideos();
+            }
+        }
+        
+        // Сохранение видео в localStorage
+        function saveVideosToStorage() {
+            localStorage.setItem('clipwave_videos', JSON.stringify(videos));
         }
         
         // Рендер видео
         function renderVideos() {
             const container = document.getElementById('videoFeed');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (videos.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
             container.innerHTML = '';
             
             videos.forEach((video, index) => {
@@ -374,7 +402,7 @@
             // Автовоспроизведение первого видео
             setTimeout(() => {
                 const firstVideo = container.querySelector('.video-item.active video');
-                if (firstVideo) firstVideo.play();
+                if (firstVideo) firstVideo.play().catch(e => console.log("Автовоспроизведение заблокировано"));
             }, 500);
         }
         
@@ -384,6 +412,7 @@
             if (video) {
                 video.liked = !video.liked;
                 video.likes += video.liked ? 1 : -1;
+                saveVideosToStorage();
                 renderVideos();
                 showNotification(video.liked ? 'Добавлено в понравившиеся!' : 'Лайк удален');
             }
@@ -410,19 +439,51 @@
                 item.classList.remove('active');
             });
             event.target.classList.add('active');
+            
+            // Обновить состояние пустой ленты
+            if (sectionId === 'videoFeed') {
+                updateEmptyState();
+            }
+        }
+        
+        // Обновить состояние пустой ленты
+        function updateEmptyState() {
+            const emptyState = document.getElementById('emptyState');
+            if (videos.length === 0) {
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+            }
         }
         
         // Загрузка видео
         function handleVideoUpload(event) {
             const file = event.target.files[0];
             if (file) {
-                showNotification(`Видео "${file.name}" выбрано для загрузки`);
+                // Проверяем тип файла
+                if (!file.type.startsWith('video/')) {
+                    showNotification('Пожалуйста, выберите видео файл');
+                    return;
+                }
+                
+                // Создаем URL для предпросмотра
+                const videoUrl = URL.createObjectURL(file);
+                showNotification(`Видео "${file.name}" готово к загрузке`);
+                
+                // Сохраняем информацию о файле для загрузки
+                document.getElementById('videoUpload').dataset.videoUrl = videoUrl;
             }
         }
         
         function uploadVideo() {
             const description = document.getElementById('videoDescription').value;
             const tags = document.getElementById('videoTags').value;
+            const videoUrl = document.getElementById('videoUpload').dataset.videoUrl;
+            
+            if (!videoUrl) {
+                showNotification('Сначала выберите видео файл');
+                return;
+            }
             
             if (!description) {
                 showNotification('Добавьте описание к видео');
@@ -430,16 +491,17 @@
             }
             
             const newVideo = {
-                id: videos.length + 1,
+                id: Date.now(), // Используем timestamp как ID
                 username: currentUser || 'anonymous',
                 description: description,
-                tags: tags.split(',').map(tag => tag.trim()),
+                tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
                 likes: 0,
                 liked: false,
-                videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4'
+                videoUrl: videoUrl
             };
             
             videos.unshift(newVideo);
+            saveVideosToStorage();
             renderVideos();
             showSection('videoFeed');
             showNotification('Видео успешно опубликовано!');
@@ -447,6 +509,8 @@
             // Очистить форму
             document.getElementById('videoDescription').value = '';
             document.getElementById('videoTags').value = '';
+            document.getElementById('videoUpload').dataset.videoUrl = '';
+            document.getElementById('videoUpload').value = '';
         }
         
         // Логин
@@ -457,7 +521,45 @@
                 document.getElementById('profileUsername').textContent = username;
                 document.getElementById('loginForm').style.display = 'none';
                 document.getElementById('userVideos').style.display = 'block';
+                updateProfileStats();
                 showNotification(`Добро пожаловать, ${username}!`);
+            }
+        }
+        
+        // Обновление статистики профиля
+        function updateProfileStats() {
+            if (!currentUser) return;
+            
+            const userVideos = videos.filter(video => video.username === currentUser);
+            const totalLikes = userVideos.reduce((sum, video) => sum + video.likes, 0);
+            
+            document.getElementById('profileStats').textContent = 
+                `${userVideos.length} видео • ${totalLikes} лайков`;
+                
+            // Показываем видео пользователя
+            const myVideosList = document.getElementById('myVideosList');
+            myVideosList.innerHTML = '';
+            
+            if (userVideos.length === 0) {
+                myVideosList.innerHTML = '<p>У вас пока нет загруженных видео</p>';
+            } else {
+                userVideos.forEach(video => {
+                    const videoElement = document.createElement('div');
+                    videoElement.className = 'video-item';
+                    videoElement.style.position = 'relative';
+                    videoElement.style.height = '200px';
+                    videoElement.style.margin = '10px 0';
+                    videoElement.innerHTML = `
+                        <video class="video-player" loop style="border-radius: 10px;">
+                            <source src="${video.videoUrl}" type="video/mp4">
+                        </video>
+                        <div style="position: absolute; bottom: 10px; left: 10px; right: 10px;">
+                            <div style="font-size: 0.9em; margin-bottom: 5px;">${video.description}</div>
+                            <div style="font-size: 0.8em; opacity: 0.8;">${video.likes} лайков</div>
+                        </div>
+                    `;
+                    myVideosList.appendChild(videoElement);
+                });
             }
         }
         
@@ -516,6 +618,7 @@
                 } else if (e.key === 'ArrowUp') {
                     previousVideo();
                 } else if (e.key === ' ') {
+                    e.preventDefault();
                     const currentVideo = document.querySelector('.video-item.active video');
                     if (currentVideo) togglePlayPause(currentVideo);
                 }
@@ -527,6 +630,8 @@
             if (currentVideoIndex < videos.length - 1) {
                 currentVideoIndex++;
                 switchVideo(currentVideoIndex);
+            } else {
+                showNotification('Это последнее видео');
             }
         }
         
@@ -535,11 +640,19 @@
             if (currentVideoIndex > 0) {
                 currentVideoIndex--;
                 switchVideo(currentVideoIndex);
+            } else {
+                showNotification('Это первое видео');
             }
         }
         
         // Переключение видео
         function switchVideo(index) {
+            // Останавливаем текущее видео
+            const currentVideo = document.querySelector('.video-item.active video');
+            if (currentVideo) {
+                currentVideo.pause();
+            }
+            
             document.querySelectorAll('.video-item').forEach(item => {
                 item.classList.remove('active');
             });
@@ -549,7 +662,7 @@
                 videoItems[index].classList.add('active');
                 const video = videoItems[index].querySelector('video');
                 video.currentTime = 0;
-                video.play();
+                video.play().catch(e => console.log("Автовоспроизведение заблокировано"));
             }
         }
     </script>
