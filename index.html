@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ClipWave - Ваши видео</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -104,16 +105,27 @@
             color: white;
             text-align: center;
             cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         
         .action-icon {
-            font-size: 2em;
+            font-size: 24px;
             margin-bottom: 5px;
             transition: transform 0.2s;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
         }
         
         .action-btn:hover .action-icon {
             transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.2);
         }
         
         .action-count {
@@ -123,6 +135,7 @@
         
         .like-btn.liked .action-icon {
             color: #ff0050;
+            background: rgba(255, 0, 80, 0.2);
         }
         
         .nav {
@@ -130,12 +143,13 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             backdrop-filter: blur(10px);
             display: flex;
             justify-content: space-around;
             padding: 15px;
             z-index: 1000;
+            border-top: 1px solid #333;
         }
         
         .nav-item {
@@ -143,17 +157,25 @@
             font-size: 0.9em;
             opacity: 0.7;
             cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
         }
         
         .nav-item.active {
             opacity: 1;
-            font-weight: bold;
+            color: #ff0050;
+        }
+        
+        .nav-icon {
+            font-size: 20px;
         }
         
         .upload-section {
             display: none;
             padding: 20px;
-            height: 100vh;
+            height: calc(100vh - 60px);
             background: #000;
             overflow-y: auto;
         }
@@ -164,16 +186,24 @@
         
         .upload-area {
             border: 2px dashed #333;
-            border-radius: 10px;
-            padding: 40px 20px;
+            border-radius: 15px;
+            padding: 60px 20px;
             text-align: center;
             margin: 20px 0;
             cursor: pointer;
             transition: border-color 0.3s;
+            background: rgba(255, 255, 255, 0.05);
         }
         
         .upload-area:hover {
             border-color: #ff0050;
+            background: rgba(255, 0, 80, 0.05);
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #ff0050;
         }
         
         .upload-btn {
@@ -186,6 +216,11 @@
             cursor: pointer;
             margin-top: 10px;
             width: 100%;
+            transition: background 0.3s;
+        }
+        
+        .upload-btn:hover {
+            background: #e00045;
         }
         
         .upload-btn:disabled {
@@ -196,7 +231,7 @@
         .profile-section {
             display: none;
             padding: 20px;
-            height: 100vh;
+            height: calc(100vh - 60px);
             background: #000;
             overflow-y: auto;
         }
@@ -208,6 +243,8 @@
         .profile-header {
             text-align: center;
             padding: 20px 0;
+            border-bottom: 1px solid #333;
+            margin-bottom: 20px;
         }
         
         .profile-avatar {
@@ -219,41 +256,53 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2em;
+            font-size: 32px;
+            color: white;
+            font-weight: bold;
         }
         
         .login-form, .register-form {
-            max-width: 300px;
+            max-width: 400px;
             margin: 20px auto;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid #333;
         }
         
         .form-input {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             margin: 10px 0;
-            background: #333;
-            border: none;
-            border-radius: 8px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 10px;
             color: white;
+            font-size: 1em;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #ff0050;
         }
         
         .form-title {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            font-size: 1.5em;
         }
         
         .form-switch {
             text-align: center;
-            margin-top: 15px;
+            margin-top: 20px;
             font-size: 0.9em;
+            color: #aaa;
         }
         
         .form-switch a {
             color: #ff0050;
             cursor: pointer;
+            text-decoration: none;
         }
         
         .notification {
@@ -262,29 +311,43 @@
             right: 20px;
             background: #ff0050;
             color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
             display: none;
             z-index: 1001;
+            box-shadow: 0 5px 15px rgba(255, 0, 80, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
         
         .empty-state {
             text-align: center;
             padding: 50px 20px;
             color: #666;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
         
         .empty-icon {
-            font-size: 4em;
+            font-size: 64px;
             margin-bottom: 20px;
+            color: #444;
         }
         
         .header {
             text-align: center;
             padding: 20px;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             position: relative;
             z-index: 100;
+            border-bottom: 1px solid #333;
         }
         
         .logo {
@@ -302,6 +365,7 @@
             margin: 20px 0;
             border-radius: 10px;
             display: none;
+            background: #000;
         }
         
         .user-videos {
@@ -317,6 +381,7 @@
             overflow: hidden;
             aspect-ratio: 9/16;
             background: #222;
+            cursor: pointer;
         }
         
         .user-video-thumb {
@@ -334,6 +399,34 @@
             padding: 10px;
             font-size: 0.8em;
         }
+        
+        .section-title {
+            margin: 20px 0;
+            font-size: 1.3em;
+        }
+        
+        .logout-btn {
+            background: transparent;
+            color: #ff0050;
+            border: 1px solid #ff0050;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 0, 80, 0.1);
+        }
+        
+        .video-upload-info {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
     </style>
 </head>
 <body>
@@ -349,7 +442,9 @@
         <!-- Главная лента -->
         <div class="video-container" id="videoFeed">
             <div class="empty-state" id="emptyState">
-                <div class="empty-icon">📹</div>
+                <div class="empty-icon">
+                    <i class="fas fa-video"></i>
+                </div>
                 <h2>Пока нет видео</h2>
                 <p>Загрузите первое видео, чтобы начать просмотр</p>
                 <button class="upload-btn" onclick="showSection('uploadSection')">Загрузить видео</button>
@@ -359,10 +454,13 @@
         
         <!-- Раздел загрузки -->
         <div class="upload-section" id="uploadSection">
-            <h2>Загрузить видео</h2>
+            <h2 class="section-title">Загрузить видео</h2>
             <div class="upload-area" id="uploadArea" onclick="document.getElementById('videoUpload').click()">
-                <p>📹 Нажмите для загрузки видео</p>
-                <p style="font-size: 0.8em; margin-top: 10px; opacity: 0.7;">MP4, MOV, AVI до 50MB</p>
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <p>Нажмите для загрузки видео</p>
+                <p class="video-upload-info">MP4, MOV, AVI до 50MB</p>
             </div>
             <input type="file" id="videoUpload" accept="video/*" style="display: none" onchange="handleVideoUpload(event)">
             
@@ -370,13 +468,15 @@
             
             <input type="text" class="form-input" id="videoDescription" placeholder="Описание видео...">
             <input type="text" class="form-input" id="videoTags" placeholder="Теги (через запятую)...">
-            <button class="upload-btn" id="uploadButton" onclick="uploadVideo()" disabled>Опубликовать</button>
+            <button class="upload-btn" id="uploadButton" onclick="uploadVideo()" disabled>Опубликовать видео</button>
         </div>
         
         <!-- Профиль -->
         <div class="profile-section" id="profileSection">
             <div class="profile-header">
-                <div class="profile-avatar" id="profileAvatar">👤</div>
+                <div class="profile-avatar" id="profileAvatar">
+                    <i class="fas fa-user"></i>
+                </div>
                 <h2 id="profileUsername">Гость</h2>
                 <p id="profileStats">0 видео • 0 лайков</p>
             </div>
@@ -404,16 +504,32 @@
             </div>
             
             <div id="userVideos" style="display: none;">
-                <h3>Мои видео</h3>
+                <h3 class="section-title">Мои видео</h3>
                 <div class="user-videos" id="myVideosList"></div>
+                <button class="logout-btn" onclick="logout()">Выйти из аккаунта</button>
             </div>
         </div>
         
         <!-- Навигация -->
         <div class="nav">
-            <div class="nav-item active" onclick="showSection('videoFeed')">🏠 Главная</div>
-            <div class="nav-item" onclick="showSection('uploadSection')">➕ Загрузить</div>
-            <div class="nav-item" onclick="showSection('profileSection')">👤 Профиль</div>
+            <div class="nav-item active" onclick="showSection('videoFeed')">
+                <div class="nav-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <div>Главная</div>
+            </div>
+            <div class="nav-item" onclick="showSection('uploadSection')">
+                <div class="nav-icon">
+                    <i class="fas fa-plus-square"></i>
+                </div>
+                <div>Загрузить</div>
+            </div>
+            <div class="nav-item" onclick="showSection('profileSection')">
+                <div class="nav-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>Профиль</div>
+            </div>
         </div>
     </div>
 
@@ -469,7 +585,7 @@
             const emptyState = document.getElementById('emptyState');
             
             if (videos.length === 0) {
-                emptyState.style.display = 'block';
+                emptyState.style.display = 'flex';
                 return;
             }
             
@@ -493,15 +609,21 @@
                         </div>
                         <div class="action-buttons">
                             <button class="action-btn like-btn ${video.liked ? 'liked' : ''}" onclick="toggleLike(${video.id})">
-                                <div class="action-icon">${video.liked ? '❤️' : '🤍'}</div>
+                                <div class="action-icon">
+                                    <i class="fas fa-heart"></i>
+                                </div>
                                 <div class="action-count">${formatCount(video.likes)}</div>
                             </button>
-                            <button class="action-btn" onclick="showNotification('Функция в разработке')">
-                                <div class="action-icon">💬</div>
+                            <button class="action-btn" onclick="showNotification('Функция комментариев в разработке')">
+                                <div class="action-icon">
+                                    <i class="fas fa-comment"></i>
+                                </div>
                                 <div class="action-count">комменты</div>
                             </button>
-                            <button class="action-btn" onclick="showNotification('Функция в разработке')">
-                                <div class="action-icon">↗️</div>
+                            <button class="action-btn" onclick="showNotification('Функция репоста в разработке')">
+                                <div class="action-icon">
+                                    <i class="fas fa-share"></i>
+                                </div>
                                 <div class="action-count">поделиться</div>
                             </button>
                         </div>
@@ -580,7 +702,7 @@
         function updateEmptyState() {
             const emptyState = document.getElementById('emptyState');
             if (videos.length === 0) {
-                emptyState.style.display = 'block';
+                emptyState.style.display = 'flex';
             } else {
                 emptyState.style.display = 'none';
             }
@@ -616,8 +738,11 @@
                 
                 // Обновляем текст области загрузки
                 document.getElementById('uploadArea').innerHTML = `
-                    <p>✅ Видео выбрано</p>
-                    <p style="font-size: 0.8em; margin-top: 10px; opacity: 0.7;">${file.name}</p>
+                    <div class="upload-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <p>Видео выбрано</p>
+                    <p class="video-upload-info">${file.name}</p>
                 `;
                 
                 showNotification(`Видео "${file.name}" готово к загрузке`);
@@ -627,6 +752,7 @@
         function uploadVideo() {
             if (!currentUser) {
                 showNotification('Войдите в аккаунт, чтобы загружать видео');
+                showSection('profileSection');
                 return;
             }
             
@@ -664,6 +790,11 @@
             showNotification('Видео успешно опубликовано!');
             
             // Очистить форму
+            resetUploadForm();
+        }
+        
+        // Сброс формы загрузки
+        function resetUploadForm() {
             document.getElementById('videoDescription').value = '';
             document.getElementById('videoTags').value = '';
             document.getElementById('videoPreview').style.display = 'none';
@@ -671,8 +802,11 @@
             document.getElementById('videoUpload').value = '';
             document.getElementById('uploadButton').disabled = true;
             document.getElementById('uploadArea').innerHTML = `
-                <p>📹 Нажмите для загрузки видео</p>
-                <p style="font-size: 0.8em; margin-top: 10px; opacity: 0.7;">MP4, MOV, AVI до 50MB</p>
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <p>Нажмите для загрузки видео</p>
+                <p class="video-upload-info">MP4, MOV, AVI до 50MB</p>
             `;
             
             currentVideoFile = null;
@@ -760,7 +894,8 @@
             document.getElementById('userVideos').style.display = 'none';
             document.getElementById('profileUsername').textContent = 'Гость';
             document.getElementById('profileStats').textContent = '0 видео • 0 лайков';
-            document.getElementById('profileAvatar').textContent = '👤';
+            document.getElementById('profileAvatar').innerHTML = '<i class="fas fa-user"></i>';
+            localStorage.removeItem('clipwave_current_user');
             showNotification('Вы вышли из аккаунта');
         }
         
@@ -772,6 +907,9 @@
             document.getElementById('profileUsername').textContent = currentUser;
             document.getElementById('profileAvatar').textContent = currentUser.charAt(0).toUpperCase();
             updateProfileStats();
+            
+            // Сохраняем текущего пользователя
+            localStorage.setItem('clipwave_current_user', currentUser);
         }
         
         // Проверка состояния авторизации
@@ -805,15 +943,12 @@
             document.getElementById('profileStats').textContent = 
                 `${userVideos.length} видео • ${totalLikes} лайков`;
                 
-            // Сохраняем текущего пользователя
-            localStorage.setItem('clipwave_current_user', currentUser);
-                
             // Показываем видео пользователя
             const myVideosList = document.getElementById('myVideosList');
             myVideosList.innerHTML = '';
             
             if (userVideos.length === 0) {
-                myVideosList.innerHTML = '<p>У вас пока нет загруженных видео</p>';
+                myVideosList.innerHTML = '<p style="text-align:center; color:#666; grid-column:1/-1;">У вас пока нет загруженных видео</p>';
             } else {
                 userVideos.forEach(video => {
                     const videoElement = document.createElement('div');
@@ -824,19 +959,11 @@
                         </video>
                         <div class="user-video-info">
                             <div>${video.description.substring(0, 30)}${video.description.length > 30 ? '...' : ''}</div>
-                            <div>${video.likes} лайков</div>
+                            <div><i class="fas fa-heart" style="color:#ff0050;"></i> ${video.likes}</div>
                         </div>
                     `;
                     myVideosList.appendChild(videoElement);
                 });
-                
-                // Добавляем кнопку выхода
-                const logoutBtn = document.createElement('button');
-                logoutBtn.className = 'upload-btn';
-                logoutBtn.textContent = 'Выйти';
-                logoutBtn.onclick = logout;
-                logoutBtn.style.marginTop = '20px';
-                myVideosList.appendChild(logoutBtn);
             }
         }
         
