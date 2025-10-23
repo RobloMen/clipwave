@@ -18,16 +18,54 @@
             color: white;
             height: 100vh;
             overflow: hidden;
-            position: relative;
         }
         
         .app-container {
             height: 100vh;
-            position: relative;
+            display: flex;
+            flex-direction: column;
         }
         
-        .video-container {
-            height: 100vh;
+        .header {
+            text-align: center;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.9);
+            border-bottom: 1px solid #333;
+            z-index: 100;
+        }
+        
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+        }
+        
+        .section.active {
+            display: flex;
+        }
+        
+        /* Стили для ленты видео */
+        .video-feed {
+            flex: 1;
             position: relative;
             overflow: hidden;
         }
@@ -40,12 +78,10 @@
             height: 100%;
             background: #111;
             display: none;
-            align-items: center;
-            justify-content: center;
         }
         
         .video-item.active {
-            display: flex;
+            display: block;
         }
         
         .video-player {
@@ -138,50 +174,11 @@
             background: rgba(255, 0, 80, 0.2);
         }
         
-        .nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: space-around;
-            padding: 15px;
-            z-index: 1000;
-            border-top: 1px solid #333;
-        }
-        
-        .nav-item {
-            text-align: center;
-            font-size: 0.9em;
-            opacity: 0.7;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .nav-item.active {
-            opacity: 1;
-            color: #ff0050;
-        }
-        
-        .nav-icon {
-            font-size: 20px;
-        }
-        
-        .upload-section {
-            display: none;
+        /* Стили для загрузки */
+        .upload-content {
+            flex: 1;
             padding: 20px;
-            height: calc(100vh - 60px);
-            background: #000;
             overflow-y: auto;
-        }
-        
-        .upload-section.active {
-            display: block;
         }
         
         .upload-area {
@@ -228,16 +225,11 @@
             cursor: not-allowed;
         }
         
-        .profile-section {
-            display: none;
+        /* Стили для профиля */
+        .profile-content {
+            flex: 1;
             padding: 20px;
-            height: calc(100vh - 60px);
-            background: #000;
             overflow-y: auto;
-        }
-        
-        .profile-section.active {
-            display: block;
         }
         
         .profile-header {
@@ -341,24 +333,6 @@
             color: #444;
         }
         
-        .header {
-            text-align: center;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.9);
-            position: relative;
-            z-index: 100;
-            border-bottom: 1px solid #333;
-        }
-        
-        .logo {
-            font-size: 1.8em;
-            font-weight: bold;
-            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
         .video-preview {
             max-width: 100%;
             max-height: 300px;
@@ -427,6 +401,36 @@
             font-size: 0.9em;
             color: #aaa;
         }
+        
+        .nav {
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            border-top: 1px solid #333;
+        }
+        
+        .nav-item {
+            text-align: center;
+            font-size: 0.9em;
+            opacity: 0.7;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+        
+        .nav-item.active {
+            opacity: 1;
+            color: #ff0050;
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+        }
     </style>
 </head>
 <body>
@@ -439,80 +443,89 @@
             <div class="logo">ClipWave</div>
         </div>
         
-        <!-- Главная лента -->
-        <div class="video-container" id="videoFeed">
-            <div class="empty-state" id="emptyState">
-                <div class="empty-icon">
-                    <i class="fas fa-video"></i>
-                </div>
-                <h2>Пока нет видео</h2>
-                <p>Загрузите первое видео, чтобы начать просмотр</p>
-                <button class="upload-btn" onclick="showSection('uploadSection')">Загрузить видео</button>
-            </div>
-            <!-- Видео будут добавляться динамически -->
-        </div>
-        
-        <!-- Раздел загрузки -->
-        <div class="upload-section" id="uploadSection">
-            <h2 class="section-title">Загрузить видео</h2>
-            <div class="upload-area" id="uploadArea" onclick="document.getElementById('videoUpload').click()">
-                <div class="upload-icon">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                </div>
-                <p>Нажмите для загрузки видео</p>
-                <p class="video-upload-info">MP4, MOV, AVI до 50MB</p>
-            </div>
-            <input type="file" id="videoUpload" accept="video/*" style="display: none" onchange="handleVideoUpload(event)">
-            
-            <video class="video-preview" id="videoPreview" controls></video>
-            
-            <input type="text" class="form-input" id="videoDescription" placeholder="Описание видео...">
-            <input type="text" class="form-input" id="videoTags" placeholder="Теги (через запятую)...">
-            <button class="upload-btn" id="uploadButton" onclick="uploadVideo()" disabled>Опубликовать видео</button>
-        </div>
-        
-        <!-- Профиль -->
-        <div class="profile-section" id="profileSection">
-            <div class="profile-header">
-                <div class="profile-avatar" id="profileAvatar">
-                    <i class="fas fa-user"></i>
-                </div>
-                <h2 id="profileUsername">Гость</h2>
-                <p id="profileStats">0 видео • 0 лайков</p>
-            </div>
-            
-            <div class="login-form" id="loginForm">
-                <h3 class="form-title">Вход в аккаунт</h3>
-                <input type="text" class="form-input" id="loginUsername" placeholder="Имя пользователя">
-                <input type="password" class="form-input" id="loginPassword" placeholder="Пароль">
-                <button class="upload-btn" onclick="login()">Войти</button>
-                <div class="form-switch">
-                    Нет аккаунта? <a onclick="showRegisterForm()">Зарегистрироваться</a>
+        <!-- Основной контент -->
+        <div class="content">
+            <!-- Главная лента -->
+            <div class="section active" id="homeSection">
+                <div class="video-feed" id="videoFeed">
+                    <div class="empty-state" id="emptyState">
+                        <div class="empty-icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <h2>Пока нет видео</h2>
+                        <p>Загрузите первое видео, чтобы начать просмотр</p>
+                        <button class="upload-btn" onclick="showSection('uploadSection')">Загрузить видео</button>
+                    </div>
+                    <!-- Видео будут добавляться динамически -->
                 </div>
             </div>
             
-            <div class="register-form" id="registerForm" style="display: none;">
-                <h3 class="form-title">Регистрация</h3>
-                <input type="text" class="form-input" id="registerUsername" placeholder="Имя пользователя">
-                <input type="email" class="form-input" id="registerEmail" placeholder="Email">
-                <input type="password" class="form-input" id="registerPassword" placeholder="Пароль">
-                <input type="password" class="form-input" id="registerConfirmPassword" placeholder="Подтвердите пароль">
-                <button class="upload-btn" onclick="register()">Зарегистрироваться</button>
-                <div class="form-switch">
-                    Уже есть аккаунт? <a onclick="showLoginForm()">Войти</a>
+            <!-- Раздел загрузки -->
+            <div class="section" id="uploadSection">
+                <div class="upload-content">
+                    <h2 class="section-title">Загрузить видео</h2>
+                    <div class="upload-area" id="uploadArea" onclick="document.getElementById('videoUpload').click()">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <p>Нажмите для загрузки видео</p>
+                        <p class="video-upload-info">MP4, MOV, AVI до 50MB</p>
+                    </div>
+                    <input type="file" id="videoUpload" accept="video/*" style="display: none" onchange="handleVideoUpload(event)">
+                    
+                    <video class="video-preview" id="videoPreview" controls></video>
+                    
+                    <input type="text" class="form-input" id="videoDescription" placeholder="Описание видео...">
+                    <input type="text" class="form-input" id="videoTags" placeholder="Теги (через запятую)...">
+                    <button class="upload-btn" id="uploadButton" onclick="uploadVideo()" disabled>Опубликовать видео</button>
                 </div>
             </div>
             
-            <div id="userVideos" style="display: none;">
-                <h3 class="section-title">Мои видео</h3>
-                <div class="user-videos" id="myVideosList"></div>
-                <button class="logout-btn" onclick="logout()">Выйти из аккаунта</button>
+            <!-- Профиль -->
+            <div class="section" id="profileSection">
+                <div class="profile-content">
+                    <div class="profile-header">
+                        <div class="profile-avatar" id="profileAvatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <h2 id="profileUsername">Гость</h2>
+                        <p id="profileStats">0 видео • 0 лайков</p>
+                    </div>
+                    
+                    <div class="login-form" id="loginForm">
+                        <h3 class="form-title">Вход в аккаунт</h3>
+                        <input type="text" class="form-input" id="loginUsername" placeholder="Имя пользователя">
+                        <input type="password" class="form-input" id="loginPassword" placeholder="Пароль">
+                        <button class="upload-btn" onclick="login()">Войти</button>
+                        <div class="form-switch">
+                            Нет аккаунта? <a onclick="showRegisterForm()">Зарегистрироваться</a>
+                        </div>
+                    </div>
+                    
+                    <div class="register-form" id="registerForm" style="display: none;">
+                        <h3 class="form-title">Регистрация</h3>
+                        <input type="text" class="form-input" id="registerUsername" placeholder="Имя пользователя">
+                        <input type="email" class="form-input" id="registerEmail" placeholder="Email">
+                        <input type="password" class="form-input" id="registerPassword" placeholder="Пароль">
+                        <input type="password" class="form-input" id="registerConfirmPassword" placeholder="Подтвердите пароль">
+                        <button class="upload-btn" onclick="register()">Зарегистрироваться</button>
+                        <div class="form-switch">
+                            Уже есть аккаунт? <a onclick="showLoginForm()">Войти</a>
+                        </div>
+                    </div>
+                    
+                    <div id="userVideos" style="display: none;">
+                        <h3 class="section-title">Мои видео</h3>
+                        <div class="user-videos" id="myVideosList"></div>
+                        <button class="logout-btn" onclick="logout()">Выйти из аккаунта</button>
+                    </div>
+                </div>
             </div>
         </div>
         
         <!-- Навигация -->
         <div class="nav">
-            <div class="nav-item active" onclick="showSection('videoFeed')">
+            <div class="nav-item active" onclick="showSection('homeSection')">
                 <div class="nav-icon">
                     <i class="fas fa-home"></i>
                 </div>
@@ -543,6 +556,8 @@
         
         // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
+            console.log("ClipWave инициализирован");
+            
             // Загружаем данные из localStorage
             loadVideosFromStorage();
             loadUsersFromStorage();
@@ -550,6 +565,9 @@
             showNotification('Добро пожаловать в ClipWave!');
             updateEmptyState();
             checkAuthState();
+            
+            // Показываем домашнюю страницу по умолчанию
+            showSection('homeSection');
         });
         
         // Загрузка видео из localStorage
@@ -557,7 +575,10 @@
             const savedVideos = localStorage.getItem('clipwave_videos');
             if (savedVideos) {
                 videos = JSON.parse(savedVideos);
+                console.log("Загружено видео:", videos.length);
                 renderVideos();
+            } else {
+                console.log("Нет сохраненных видео");
             }
         }
         
@@ -566,17 +587,33 @@
             const savedUsers = localStorage.getItem('clipwave_users');
             if (savedUsers) {
                 users = JSON.parse(savedUsers);
+                console.log("Загружено пользователей:", users.length);
+            } else {
+                console.log("Нет сохраненных пользователей");
+                // Добавляем тестового пользователя для демонстрации
+                users = [
+                    {
+                        id: 1,
+                        username: "demo",
+                        email: "demo@clipwave.com", 
+                        password: "demo123",
+                        registeredAt: new Date().toISOString()
+                    }
+                ];
+                saveUsersToStorage();
             }
         }
         
         // Сохранение видео в localStorage
         function saveVideosToStorage() {
             localStorage.setItem('clipwave_videos', JSON.stringify(videos));
+            console.log("Видео сохранены:", videos.length);
         }
         
         // Сохранение пользователей в localStorage
         function saveUsersToStorage() {
             localStorage.setItem('clipwave_users', JSON.stringify(users));
+            console.log("Пользователи сохранены:", users.length);
         }
         
         // Рендер видео
@@ -586,6 +623,7 @@
             
             if (videos.length === 0) {
                 emptyState.style.display = 'flex';
+                container.innerHTML = '';
                 return;
             }
             
@@ -672,9 +710,14 @@
         
         // Показать раздел
         function showSection(sectionId) {
-            document.querySelectorAll('.video-container, .upload-section, .profile-section').forEach(section => {
+            console.log("Переключение на раздел:", sectionId);
+            
+            // Скрываем все разделы
+            document.querySelectorAll('.section').forEach(section => {
                 section.classList.remove('active');
             });
+            
+            // Показываем выбранный раздел
             document.getElementById(sectionId).classList.add('active');
             
             // Обновить навигацию
@@ -682,13 +725,14 @@
                 item.classList.remove('active');
             });
             
+            // Активируем соответствующую кнопку навигации
             const navItems = document.querySelectorAll('.nav-item');
-            if (sectionId === 'videoFeed') navItems[0].classList.add('active');
+            if (sectionId === 'homeSection') navItems[0].classList.add('active');
             else if (sectionId === 'uploadSection') navItems[1].classList.add('active');
             else if (sectionId === 'profileSection') navItems[2].classList.add('active');
             
             // Обновить состояние пустой ленты
-            if (sectionId === 'videoFeed') {
+            if (sectionId === 'homeSection') {
                 updateEmptyState();
             }
             
@@ -712,6 +756,8 @@
         function handleVideoUpload(event) {
             const file = event.target.files[0];
             if (file) {
+                console.log("Выбран файл:", file.name);
+                
                 // Проверяем тип файла
                 if (!file.type.startsWith('video/')) {
                     showNotification('Пожалуйста, выберите видео файл');
@@ -773,7 +819,7 @@
             const videoUrl = URL.createObjectURL(currentVideoFile);
             
             const newVideo = {
-                id: Date.now(), // Используем timestamp как ID
+                id: Date.now(),
                 username: currentUser,
                 description: description,
                 tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
@@ -786,7 +832,7 @@
             videos.unshift(newVideo);
             saveVideosToStorage();
             renderVideos();
-            showSection('videoFeed');
+            showSection('homeSection');
             showNotification('Видео успешно опубликовано!');
             
             // Очистить форму
@@ -843,7 +889,7 @@
                 id: Date.now(),
                 username: username,
                 email: email,
-                password: password, // В реальном приложении пароль должен хэшироваться!
+                password: password,
                 registeredAt: new Date().toISOString()
             };
             
@@ -973,7 +1019,7 @@
             const videoIndex = videos.findIndex(v => v.videoUrl === videoUrl);
             if (videoIndex !== -1) {
                 currentVideoIndex = videoIndex;
-                showSection('videoFeed');
+                showSection('homeSection');
                 switchVideo(currentVideoIndex);
             }
         }
@@ -1082,6 +1128,13 @@
                     showNotification("Нажмите на видео для воспроизведения");
                 });
             }
+        }
+        
+        // Демо-функция для быстрого тестирования
+        function demoLogin() {
+            document.getElementById('loginUsername').value = 'demo';
+            document.getElementById('loginPassword').value = 'demo123';
+            login();
         }
     </script>
 </body>
