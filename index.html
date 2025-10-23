@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClipWave - Тренды дня</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+        }
+        
+        .logo {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .tagline {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .video-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .video-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            margin-right: 12px;
+        }
+        
+        .user-info {
+            flex-grow: 1;
+        }
+        
+        .username {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .video-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .video-tags {
+            margin-top: 10px;
+        }
+        
+        .tag {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-right: 8px;
+            margin-bottom: 5px;
+        }
+        
+        .trending-badge {
+            background: #ff4757;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+        }
+        
+        .nav-item {
+            text-align: center;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+        
+        .nav-item.active {
+            opacity: 1;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">ClipWave</div>
+            <div class="tagline">Лучшие видео каждый день</div>
+        </div>
+        
+        <div class="video-card">
+            <div class="video-header">
+                <div class="avatar"></div>
+                <div class="user-info">
+                    <div class="username">Творческий Хаос <span class="trending-badge">ТРЕНД</span></div>
+                </div>
+            </div>
+            <div class="video-description">
+                Лайфхаки, которые изменят твой подход к творчеству! 🎨
+            </div>
+            <div class="video-stats">
+                <span>❤️ 24.5K</span>
+                <span>💬 1.2K</span>
+                <span>↗️ 8.7K</span>
+            </div>
+            <div class="video-tags">
+                <span class="tag">#творчество</span>
+                <span class="tag">#лайфхаки</span>
+                <span class="tag">#идеи</span>
+            </div>
+        </div>
+        
+        <div class="video-card">
+            <div class="video-header">
+                <div class="avatar" style="background: linear-gradient(45deg, #48dbfb, #0abde3);"></div>
+                <div class="user-info">
+                    <div class="username">Tech Insights</div>
+                </div>
+            </div>
+            <div class="video-description">
+                Будущее ИИ: что нас ждет через 5 лет? 🤖
+            </div>
+            <div class="video-stats">
+                <span>❤️ 45.2K</span>
+                <span>💬 3.1K</span>
+                <span>↗️ 15.8K</span>
+            </div>
+            <div class="video-tags">
+                <span class="tag">#технологии</span>
+                <span class="tag">#ии</span>
+                <span class="tag">#будущее</span>
+            </div>
+        </div>
+        
+        <div class="video-card">
+            <div class="video-header">
+                <div class="avatar" style="background: linear-gradient(45deg, #1dd1a1, #10ac84);"></div>
+                <div class="user-info">
+                    <div class="username">Уютный Мир <span class="trending-badge">НОВОЕ</span></div>
+                </div>
+            </div>
+            <div class="video-description">
+                Вечерние ритуалы для идеального отдыха 🕯️
+            </div>
+            <div class="video-stats">
+                <span>❤️ 18.9K</span>
+                <span>💬 890</span>
+                <span>↗️ 4.2K</span>
+            </div>
+            <div class="video-tags">
+                <span class="tag">#уют</span>
+                <span class="tag">#отдых</span>
+                <span class="tag">#лайфстайл</span>
+            </div>
+        </div>
+        
+        <div class="video-card">
+            <div class="video-header">
+                <div class="avatar" style="background: linear-gradient(45deg, #ff9ff3, #f368e0);"></div>
+                <div class="user-info">
+                    <div class="username">Кулинарный Экспресс</div>
+                </div>
+            </div>
+            <div class="video-description">
+                Рецепт, который покорил TikTok за 1 день! 🍝
+            </div>
+            <div class="video-stats">
+                <span>❤️ 67.8K</span>
+                <span>💬 5.4K</span>
+                <span>↗️ 32.1K</span>
+            </div>
+            <div class="video-tags">
+                <span class="tag">#рецепт</span>
+                <span class="tag">#еда</span>
+                <span class="tag">#кулинария</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="nav">
+        <div class="nav-item active">🏠 Главная</div>
+        <div class="nav-item">🔍 Поиск</div>
+        <div class="nav-item">➕ Создать</div>
+        <div class="nav-item">💬 Сообщения</div>
+        <div class="nav-item">👤 Профиль</div>
+    </div>
+</body>
+</html>
