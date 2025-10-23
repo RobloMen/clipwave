@@ -431,6 +431,21 @@
         .nav-icon {
             font-size: 20px;
         }
+
+        .demo-account {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+
+        .demo-account a {
+            color: #ff0050;
+            cursor: pointer;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -499,6 +514,9 @@
                         <button class="upload-btn" onclick="login()">Войти</button>
                         <div class="form-switch">
                             Нет аккаунта? <a onclick="showRegisterForm()">Зарегистрироваться</a>
+                        </div>
+                        <div class="demo-account">
+                            Для теста: <a onclick="demoLogin()">демо-аккаунт</a>
                         </div>
                     </div>
                     
@@ -572,25 +590,97 @@
         
         // Загрузка видео из localStorage
         function loadVideosFromStorage() {
-            const savedVideos = localStorage.getItem('clipwave_videos');
-            if (savedVideos) {
-                videos = JSON.parse(savedVideos);
-                console.log("Загружено видео:", videos.length);
-                renderVideos();
-            } else {
-                console.log("Нет сохраненных видео");
+            try {
+                const savedVideos = localStorage.getItem('clipwave_videos');
+                if (savedVideos) {
+                    videos = JSON.parse(savedVideos);
+                    console.log("Загружено видео:", videos.length);
+                    
+                    // Восстанавливаем Blob URLs для видео
+                    videos.forEach(video => {
+                        if (video.videoBlob) {
+                            try {
+                                // Преобразуем base64 обратно в Blob
+                                const byteCharacters = atob(video.videoBlob);
+                                const byteNumbers = new Array(byteCharacters.length);
+                                for (let i = 0; i < byteCharacters.length; i++) {
+                                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                }
+                                const byteArray = new Uint8Array(byteNumbers);
+                                const blob = new Blob([byteArray], {type: 'video/mp4'});
+                                video.videoUrl = URL.createObjectURL(blob);
+                            } catch (e) {
+                                console.error("Ошибка восстановления видео:", e);
+                                // Создаем заглушку если видео не восстановилось
+                                video.videoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4';
+                            }
+                        }
+                    });
+                    
+                    renderVideos();
+                } else {
+                    console.log("Нет сохраненных видео");
+                    // Добавляем демо-видео
+                    addDemoVideos();
+                }
+            } catch (e) {
+                console.error("Ошибка загрузки видео:", e);
+                videos = [];
+                addDemoVideos();
             }
+        }
+        
+        // Добавление демо-видео
+        function addDemoVideos() {
+            const demoVideos = [
+                {
+                    id: 1,
+                    username: "demo",
+                    description: "Демонстрационное видео - красивые пейзажи",
+                    tags: ["#демо", "#пейзажи", "#природа"],
+                    likes: 15,
+                    liked: false,
+                    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4'
+                },
+                {
+                    id: 2,
+                    username: "traveler",
+                    description: "Путешествия по миру - удивительные места",
+                    tags: ["#путешествия", "#мир", "#приключения"],
+                    likes: 23,
+                    liked: false,
+                    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+                }
+            ];
+            
+            videos = demoVideos;
+            saveVideosToStorage();
+            renderVideos();
         }
         
         // Загрузка пользователей из localStorage
         function loadUsersFromStorage() {
-            const savedUsers = localStorage.getItem('clipwave_users');
-            if (savedUsers) {
-                users = JSON.parse(savedUsers);
-                console.log("Загружено пользователей:", users.length);
-            } else {
-                console.log("Нет сохраненных пользователей");
-                // Добавляем тестового пользователя для демонстрации
+            try {
+                const savedUsers = localStorage.getItem('clipwave_users');
+                if (savedUsers) {
+                    users = JSON.parse(savedUsers);
+                    console.log("Загружено пользователей:", users.length);
+                } else {
+                    console.log("Нет сохраненных пользователей");
+                    // Добавляем тестового пользователя для демонстрации
+                    users = [
+                        {
+                            id: 1,
+                            username: "demo",
+                            email: "demo@clipwave.com", 
+                            password: "demo123",
+                            registeredAt: new Date().toISOString()
+                        }
+                    ];
+                    saveUsersToStorage();
+                }
+            } catch (e) {
+                console.error("Ошибка загрузки пользователей:", e);
                 users = [
                     {
                         id: 1,
@@ -606,14 +696,28 @@
         
         // Сохранение видео в localStorage
         function saveVideosToStorage() {
-            localStorage.setItem('clipwave_videos', JSON.stringify(videos));
-            console.log("Видео сохранены:", videos.length);
+            try {
+                // Сохраняем видео без Blob URLs (они не сохраняются)
+                const videosToSave = videos.map(video => {
+                    const { videoUrl, ...videoWithoutUrl } = video;
+                    return videoWithoutUrl;
+                });
+                
+                localStorage.setItem('clipwave_videos', JSON.stringify(videosToSave));
+                console.log("Видео сохранены:", videos.length);
+            } catch (e) {
+                console.error("Ошибка сохранения видео:", e);
+            }
         }
         
         // Сохранение пользователей в localStorage
         function saveUsersToStorage() {
-            localStorage.setItem('clipwave_users', JSON.stringify(users));
-            console.log("Пользователи сохранены:", users.length);
+            try {
+                localStorage.setItem('clipwave_users', JSON.stringify(users));
+                console.log("Пользователи сохранены:", users.length);
+            } catch (e) {
+                console.error("Ошибка сохранения пользователей:", e);
+            }
         }
         
         // Рендер видео
@@ -636,6 +740,7 @@
                 videoElement.innerHTML = `
                     <video class="video-player" loop onclick="togglePlayPause(this)">
                         <source src="${video.videoUrl}" type="video/mp4">
+                        Ваш браузер не поддерживает видео тег.
                     </video>
                     <div class="video-controls">
                         <div class="video-info">
@@ -674,6 +779,7 @@
             setTimeout(() => {
                 const firstVideo = container.querySelector('.video-item.active video');
                 if (firstVideo) {
+                    firstVideo.muted = true; // Мьют для автовоспроизведения
                     firstVideo.play().catch(e => {
                         console.log("Автовоспроизведение заблокировано");
                         showNotification("Нажмите на видео для воспроизведения");
@@ -932,6 +1038,13 @@
             }
         }
         
+        // Демо-логин
+        function demoLogin() {
+            document.getElementById('loginUsername').value = 'demo';
+            document.getElementById('loginPassword').value = 'demo123';
+            login();
+        }
+        
         // Выход
         function logout() {
             currentUser = null;
@@ -964,6 +1077,7 @@
             if (savedUser) {
                 currentUser = savedUser;
                 updateUIAfterAuth();
+                showNotification(`С возвращением, ${currentUser}!`);
             }
         }
         
@@ -1123,18 +1237,12 @@
                 videoItems[index].classList.add('active');
                 const video = videoItems[index].querySelector('video');
                 video.currentTime = 0;
+                video.muted = true;
                 video.play().catch(e => {
                     console.log("Автовоспроизведение заблокировано");
                     showNotification("Нажмите на видео для воспроизведения");
                 });
             }
-        }
-        
-        // Демо-функция для быстрого тестирования
-        function demoLogin() {
-            document.getElementById('loginUsername').value = 'demo';
-            document.getElementById('loginPassword').value = 'demo123';
-            login();
         }
     </script>
 </body>
