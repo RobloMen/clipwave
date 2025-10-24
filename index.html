@@ -63,7 +63,6 @@
             display: flex;
         }
         
-        /* Стили для ленты видео */
         .video-feed {
             flex: 1;
             position: relative;
@@ -174,7 +173,6 @@
             background: rgba(255, 0, 80, 0.2);
         }
         
-        /* Стили для загрузки */
         .upload-content {
             flex: 1;
             padding: 20px;
@@ -225,7 +223,6 @@
             cursor: not-allowed;
         }
         
-        /* Стили для профиля */
         .profile-content {
             flex: 1;
             padding: 20px;
@@ -446,10 +443,28 @@
             cursor: pointer;
             text-decoration: underline;
         }
+
+        .sync-indicator {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: #00ff88;
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            display: none;
+            z-index: 1002;
+        }
     </style>
 </head>
 <body>
     <div class="app-container">
+        <!-- Индикатор синхронизации -->
+        <div class="sync-indicator" id="syncIndicator">
+            <i class="fas fa-sync-alt"></i> Синхронизация...
+        </div>
+
         <!-- Уведомления -->
         <div class="notification" id="notification"></div>
         
@@ -471,7 +486,6 @@
                         <p>Загрузите первое видео, чтобы начать просмотр</p>
                         <button class="upload-btn" onclick="showSection('uploadSection')">Загрузить видео</button>
                     </div>
-                    <!-- Видео будут добавляться динамически -->
                 </div>
             </div>
             
@@ -571,62 +585,133 @@
         let currentVideoIndex = 0;
         let users = [];
         let currentVideoFile = null;
+        let deviceId = generateDeviceId();
+        
+        // Генерация ID устройства
+        function generateDeviceId() {
+            let id = localStorage.getItem('clipwave_device_id');
+            if (!id) {
+                id = 'device_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('clipwave_device_id', id);
+            }
+            return id;
+        }
         
         // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
-            console.log("ClipWave инициализирован");
+            console.log("ClipWave инициализирован на устройстве:", deviceId);
             
-            // Загружаем данные из localStorage
-            loadVideosFromStorage();
+            // Загружаем данные
             loadUsersFromStorage();
+            loadVideosFromStorage();
             setupEventListeners();
             showNotification('Добро пожаловать в ClipWave!');
             updateEmptyState();
             checkAuthState();
             
-            // Показываем домашнюю страницу по умолчанию
-            showSection('homeSection');
+            // Начинаем синхронизацию
+            startSync();
         });
+        
+        // Синхронизация между устройствами
+        function startSync() {
+            // Синхронизируем каждые 5 секунд
+            setInterval(() => {
+                syncData();
+            }, 5000);
+            
+            // Синхронизируем при загрузке страницы
+            syncData();
+        }
+        
+        function syncData() {
+            showSyncIndicator();
+            
+            // Получаем данные из всех устройств
+            const allDevicesData = getAllDevicesData();
+            
+            // Объединяем видео со всех устройств
+            let allVideos = [];
+            Object.values(allDevicesData).forEach(deviceData => {
+                if (deviceData.videos) {
+                    allVideos = allVideos.concat(deviceData.videos);
+                }
+            });
+            
+            // Убираем дубликаты по ID
+            const uniqueVideos = [];
+            const videoIds = new Set();
+            
+            allVideos.forEach(video => {
+                if (!videoIds.has(video.id)) {
+                    videoIds.add(video.id);
+                    uniqueVideos.push(video);
+                }
+            });
+            
+            // Сортируем по времени (новые сначала)
+            uniqueVideos.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            // Обновляем локальные данные
+            if (JSON.stringify(videos) !== JSON.stringify(uniqueVideos)) {
+                videos = uniqueVideos;
+                saveVideosToStorage();
+                renderVideos();
+                showNotification('Данные обновлены');
+            }
+            
+            hideSyncIndicator();
+        }
+        
+        function getAllDevicesData() {
+            const allData = {};
+            
+            // Проходим по всем ключам localStorage
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('clipwave_device_')) {
+                    try {
+                        const deviceData = JSON.parse(localStorage.getItem(key));
+                        allData[key] = deviceData;
+                    } catch (e) {
+                        console.error('Ошибка чтения данных устройства:', key);
+                    }
+                }
+            }
+            
+            return allData;
+        }
+        
+        function showSyncIndicator() {
+            document.getElementById('syncIndicator').style.display = 'block';
+        }
+        
+        function hideSyncIndicator() {
+            document.getElementById('syncIndicator').style.display = 'none';
+        }
         
         // Загрузка видео из localStorage
         function loadVideosFromStorage() {
             try {
-                const savedVideos = localStorage.getItem('clipwave_videos');
-                if (savedVideos) {
-                    videos = JSON.parse(savedVideos);
-                    console.log("Загружено видео:", videos.length);
-                    
-                    // Восстанавливаем Blob URLs для видео
-                    videos.forEach(video => {
-                        if (video.videoBlob) {
-                            try {
-                                // Преобразуем base64 обратно в Blob
-                                const byteCharacters = atob(video.videoBlob);
-                                const byteNumbers = new Array(byteCharacters.length);
-                                for (let i = 0; i < byteCharacters.length; i++) {
-                                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                                }
-                                const byteArray = new Uint8Array(byteNumbers);
-                                const blob = new Blob([byteArray], {type: 'video/mp4'});
-                                video.videoUrl = URL.createObjectURL(blob);
-                            } catch (e) {
-                                console.error("Ошибка восстановления видео:", e);
-                                // Создаем заглушку если видео не восстановилось
-                                video.videoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4';
-                            }
-                        }
-                    });
-                    
-                    renderVideos();
+                const deviceKey = `clipwave_device_${deviceId}`;
+                const deviceData = localStorage.getItem(deviceKey);
+                
+                if (deviceData) {
+                    const parsedData = JSON.parse(deviceData);
+                    videos = parsedData.videos || [];
+                    console.log("Загружено видео с устройства:", videos.length);
                 } else {
-                    console.log("Нет сохраненных видео");
-                    // Добавляем демо-видео
-                    addDemoVideos();
+                    console.log("Нет сохраненных видео на этом устройстве");
+                    // Добавляем демо-видео только если нет других устройств
+                    if (Object.keys(getAllDevicesData()).length === 0) {
+                        addDemoVideos();
+                    }
                 }
+                
+                renderVideos();
             } catch (e) {
                 console.error("Ошибка загрузки видео:", e);
                 videos = [];
-                addDemoVideos();
             }
         }
         
@@ -634,22 +719,26 @@
         function addDemoVideos() {
             const demoVideos = [
                 {
-                    id: 1,
+                    id: Date.now() + 1,
                     username: "demo",
-                    description: "Демонстрационное видео - красивые пейзажи",
+                    description: "Демонстрационное видео - красивые пейзажи 🌄",
                     tags: ["#демо", "#пейзажи", "#природа"],
                     likes: 15,
                     liked: false,
-                    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4'
+                    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+                    timestamp: new Date().toISOString(),
+                    deviceId: deviceId
                 },
                 {
-                    id: 2,
+                    id: Date.now() + 2,
                     username: "traveler",
-                    description: "Путешествия по миру - удивительные места",
+                    description: "Путешествия по миру - удивительные места ✈️",
                     tags: ["#путешествия", "#мир", "#приключения"],
                     likes: 23,
                     liked: false,
-                    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+                    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                    timestamp: new Date().toISOString(),
+                    deviceId: deviceId
                 }
             ];
             
@@ -667,7 +756,7 @@
                     console.log("Загружено пользователей:", users.length);
                 } else {
                     console.log("Нет сохраненных пользователей");
-                    // Добавляем тестового пользователя для демонстрации
+                    // Добавляем тестового пользователя
                     users = [
                         {
                             id: 1,
@@ -697,14 +786,18 @@
         // Сохранение видео в localStorage
         function saveVideosToStorage() {
             try {
-                // Сохраняем видео без Blob URLs (они не сохраняются)
-                const videosToSave = videos.map(video => {
-                    const { videoUrl, ...videoWithoutUrl } = video;
-                    return videoWithoutUrl;
-                });
+                const deviceKey = `clipwave_device_${deviceId}`;
+                const deviceData = {
+                    deviceId: deviceId,
+                    lastUpdate: new Date().toISOString(),
+                    videos: videos
+                };
                 
-                localStorage.setItem('clipwave_videos', JSON.stringify(videosToSave));
-                console.log("Видео сохранены:", videos.length);
+                localStorage.setItem(deviceKey, JSON.stringify(deviceData));
+                console.log("Видео сохранены на устройстве:", videos.length);
+                
+                // Запускаем синхронизацию
+                syncData();
             } catch (e) {
                 console.error("Ошибка сохранения видео:", e);
             }
@@ -738,7 +831,7 @@
                 const videoElement = document.createElement('div');
                 videoElement.className = `video-item ${index === 0 ? 'active' : ''}`;
                 videoElement.innerHTML = `
-                    <video class="video-player" loop onclick="togglePlayPause(this)">
+                    <video class="video-player" loop playsinline onclick="togglePlayPause(this)">
                         <source src="${video.videoUrl}" type="video/mp4">
                         Ваш браузер не поддерживает видео тег.
                     </video>
@@ -779,10 +872,9 @@
             setTimeout(() => {
                 const firstVideo = container.querySelector('.video-item.active video');
                 if (firstVideo) {
-                    firstVideo.muted = true; // Мьют для автовоспроизведения
+                    firstVideo.muted = true;
                     firstVideo.play().catch(e => {
                         console.log("Автовоспроизведение заблокировано");
-                        showNotification("Нажмите на видео для воспроизведения");
                     });
                 }
             }, 500);
@@ -816,33 +908,25 @@
         
         // Показать раздел
         function showSection(sectionId) {
-            console.log("Переключение на раздел:", sectionId);
-            
-            // Скрываем все разделы
             document.querySelectorAll('.section').forEach(section => {
                 section.classList.remove('active');
             });
             
-            // Показываем выбранный раздел
             document.getElementById(sectionId).classList.add('active');
             
-            // Обновить навигацию
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
             });
             
-            // Активируем соответствующую кнопку навигации
             const navItems = document.querySelectorAll('.nav-item');
             if (sectionId === 'homeSection') navItems[0].classList.add('active');
             else if (sectionId === 'uploadSection') navItems[1].classList.add('active');
             else if (sectionId === 'profileSection') navItems[2].classList.add('active');
             
-            // Обновить состояние пустой ленты
             if (sectionId === 'homeSection') {
                 updateEmptyState();
             }
             
-            // Обновить профиль при переходе в него
             if (sectionId === 'profileSection') {
                 updateProfileStats();
             }
@@ -864,31 +948,25 @@
             if (file) {
                 console.log("Выбран файл:", file.name);
                 
-                // Проверяем тип файла
                 if (!file.type.startsWith('video/')) {
                     showNotification('Пожалуйста, выберите видео файл');
                     return;
                 }
                 
-                // Проверяем размер файла (50MB)
                 if (file.size > 50 * 1024 * 1024) {
                     showNotification('Файл слишком большой. Максимальный размер: 50MB');
                     return;
                 }
                 
-                // Сохраняем файл
                 currentVideoFile = file;
                 
-                // Создаем URL для предпросмотра
                 const videoUrl = URL.createObjectURL(file);
                 const preview = document.getElementById('videoPreview');
                 preview.src = videoUrl;
                 preview.style.display = 'block';
                 
-                // Активируем кнопку загрузки
                 document.getElementById('uploadButton').disabled = false;
                 
-                // Обновляем текст области загрузки
                 document.getElementById('uploadArea').innerHTML = `
                     <div class="upload-icon">
                         <i class="fas fa-check-circle"></i>
@@ -932,7 +1010,8 @@
                 likes: 0,
                 liked: false,
                 videoUrl: videoUrl,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                deviceId: deviceId
             };
             
             videos.unshift(newVideo);
@@ -941,7 +1020,6 @@
             showSection('homeSection');
             showNotification('Видео успешно опубликовано!');
             
-            // Очистить форму
             resetUploadForm();
         }
         
@@ -1002,12 +1080,10 @@
             users.push(newUser);
             saveUsersToStorage();
             
-            // Автоматический вход после регистрации
             currentUser = username;
             updateUIAfterAuth();
             showNotification(`Добро пожаловать, ${username}!`);
             
-            // Очистить форму
             document.getElementById('registerUsername').value = '';
             document.getElementById('registerEmail').value = '';
             document.getElementById('registerPassword').value = '';
@@ -1030,7 +1106,6 @@
                 updateUIAfterAuth();
                 showNotification(`С возвращением, ${username}!`);
                 
-                // Очистить форму
                 document.getElementById('loginUsername').value = '';
                 document.getElementById('loginPassword').value = '';
             } else {
@@ -1067,7 +1142,6 @@
             document.getElementById('profileAvatar').textContent = currentUser.charAt(0).toUpperCase();
             updateProfileStats();
             
-            // Сохраняем текущего пользователя
             localStorage.setItem('clipwave_current_user', currentUser);
         }
         
@@ -1103,7 +1177,6 @@
             document.getElementById('profileStats').textContent = 
                 `${userVideos.length} видео • ${totalLikes} лайков`;
                 
-            // Показываем видео пользователя
             const myVideosList = document.getElementById('myVideosList');
             myVideosList.innerHTML = '';
             
@@ -1129,7 +1202,6 @@
         
         // Воспроизведение видео пользователя
         function playUserVideo(videoUrl) {
-            // Находим видео в основном списке
             const videoIndex = videos.findIndex(v => v.videoUrl === videoUrl);
             if (videoIndex !== -1) {
                 currentVideoIndex = videoIndex;
@@ -1178,9 +1250,9 @@
                 
                 if (Math.abs(diffY) > 50) {
                     if (diffY > 0) {
-                        nextVideo(); // Свайп вверх
+                        nextVideo();
                     } else {
-                        previousVideo(); // Свайп вниз
+                        previousVideo();
                     }
                     isSwiping = false;
                 }
@@ -1196,6 +1268,13 @@
                     e.preventDefault();
                     const currentVideo = document.querySelector('.video-item.active video');
                     if (currentVideo) togglePlayPause(currentVideo);
+                }
+            });
+
+            // Синхронизация при изменении localStorage (другие вкладки)
+            window.addEventListener('storage', (e) => {
+                if (e.key && e.key.startsWith('clipwave_device_')) {
+                    syncData();
                 }
             });
         }
@@ -1222,7 +1301,6 @@
         
         // Переключение видео
         function switchVideo(index) {
-            // Останавливаем текущее видео
             const currentVideo = document.querySelector('.video-item.active video');
             if (currentVideo) {
                 currentVideo.pause();
@@ -1240,7 +1318,6 @@
                 video.muted = true;
                 video.play().catch(e => {
                     console.log("Автовоспроизведение заблокировано");
-                    showNotification("Нажмите на видео для воспроизведения");
                 });
             }
         }
